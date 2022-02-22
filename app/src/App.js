@@ -43,6 +43,7 @@ const App = () => {
   const [inputValue, setInputValue] = useState('');
   const [gifList, setGifList] = useState([]);
   const [hoveredGifIndex, setHoveredGifIndex] = useState(0);
+  const [loading, setLoading] = useState(false);
 
   const checkIfWalletIsConnected = async () => {
     try {
@@ -128,6 +129,40 @@ const App = () => {
     if (event.target === modal) {
       modal.style.display = "none";
     }
+    if (event.target === document.getElementsByClassName("modal-image-left")[0]) {
+      modal.style.display = "none";
+    }
+    if (event.target === document.getElementsByClassName("modal-image-right")[0]) {
+      modal.style.display = "none";
+    }
+  }
+
+  const handleLeftClick = (index) => {
+    setHoveredGifIndex(index - 1);
+  }
+
+  const handleRightClick = (index) => {
+    setHoveredGifIndex(index + 1);
+  }
+
+  function padTo2Digits(num) {
+    return num.toString().padStart(2, '0');
+  }
+  
+  function formatDate(date) {
+    return (
+      [
+        date.getFullYear(),
+        padTo2Digits(date.getMonth() + 1),
+        padTo2Digits(date.getDate()),
+      ].join('-') +
+      ' ' +
+      [
+        padTo2Digits(date.getHours()),
+        padTo2Digits(date.getMinutes()),
+        padTo2Digits(date.getSeconds()),
+      ].join(':')
+    );
   }
 
   const renderNotConnectedContainer = () => (
@@ -210,17 +245,19 @@ const App = () => {
   }
 
   const getGifList = async() => {
+    setLoading(true);
     try {
       const provider = getProvider();
       const program = new Program(idl, programID, provider);
       const account = await program.account.baseAccount.fetch(baseAccount.publicKey);
       
       console.log("Got the account", account)
-      setGifList(account.gifList)
-  
+      setGifList(account.gifList.reverse())
+      setLoading(false);
     } catch (error) {
       console.log("Error in getGifList: ", error)
       setGifList(null);
+      setLoading(false);
     }
   }
 
@@ -242,12 +279,62 @@ const App = () => {
   return (
     <div className="App">
       <div className={walletAddress ? 'authed-container' : 'container'}>
-        <div id="myModal" className="modal">
-          <div className="modal-content">
-            <span className="close" onClick={() => renderCloseModalOnClick()}>&times;</span>
-            <p>{hoveredGifIndex}</p>
+        {gifList.length > 0 &&
+          <div id="myModal" className="modal">
+            <div className="modal-divs">
+              <div className="modal-image-left">
+                <div className="left-button-background">
+                  {hoveredGifIndex > 0 && 
+                    <span className="left-button" onClick={() => handleLeftClick(hoveredGifIndex)}>&lt;</span>
+                  }
+                </div>
+              </div>
+              <div className="modal-content-container">            
+                <div className="modal-content">
+                  <span className="close" onClick={() => renderCloseModalOnClick()}>&times;</span>
+                  <div className="modal-items">
+                    <div className="modal-image-container">
+                      <img 
+                        className="modal-image" 
+                        src={gifList[hoveredGifIndex].gifLink} 
+                        alt={gifList[hoveredGifIndex].gifLink}
+                      ></img>
+                    </div>
+                    <div className="modal-actions-container">
+                      <div className="title-container">
+                        <div className="title">GIF by: <strong>{
+                          '0x' 
+                          + gifList[hoveredGifIndex].userAddress.toString().slice(0, 3) 
+                          + '...' 
+                          + gifList[hoveredGifIndex].userAddress.toString().slice(gifList[hoveredGifIndex].userAddress.toString().length - 3,)
+                        }</strong> ({formatDate(new Date())})</div>
+                      </div>
+                      <div className="operations-container">
+                        <textarea 
+                          className="textarea"
+                          placeholder="Add a comment..."
+                        >
+                        </textarea>
+                        <div className="post-button-container">
+                          <div className="post-button">
+                            Post
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="modal-image-right">
+                <div className="right-button-background">
+                  {hoveredGifIndex < gifList.length - 1 && 
+                    <span className="right-button" onClick={() => handleRightClick(hoveredGifIndex)}>&gt;</span>
+                  }
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
+        }
         <div className="header-container">
           <p className="header">🖼 GIF Portal</p>
           <p className="sub-text">
@@ -255,7 +342,7 @@ const App = () => {
           </p>
         </div>
         {!walletAddress && renderNotConnectedContainer()}
-        {walletAddress && renderConnectedContainer()}
+        {walletAddress && !loading && renderConnectedContainer()}
         <div className="footer-container">
           <img alt="Twitter Logo" className="twitter-logo" src={twitterLogo} />
           <a
