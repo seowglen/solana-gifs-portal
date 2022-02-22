@@ -42,6 +42,7 @@ const App = () => {
   const [walletAddress, setWalletAddress] = useState(null);
   const [inputValue, setInputValue] = useState('');
   const [gifList, setGifList] = useState([]);
+  const [hoveredGifIndex, setHoveredGifIndex] = useState(0);
 
   const checkIfWalletIsConnected = async () => {
     try {
@@ -113,13 +114,31 @@ const App = () => {
     return provider;
   }
 
+  let modal = document.getElementById("myModal");
+
+  const renderModal = () => {
+    modal.style.display = "block";
+  }
+
+  const renderCloseModalOnClick = () => {
+    modal.style.display = "none";
+  }
+
+  window.onclick = function(event) {
+    if (event.target === modal) {
+      modal.style.display = "none";
+    }
+  }
+
   const renderNotConnectedContainer = () => (
-    <button
-      className="cta-button connect-wallet-button"
-      onClick={connectWallet}
-    >
-      Connect to Wallet
-    </button>
+    <div className="disconnected-container">
+      <button
+        className="cta-button connect-wallet-button"
+        onClick={connectWallet}
+      >
+        Connect to Wallet
+      </button>
+    </div>
   );
 
   const renderConnectedContainer = () => {
@@ -142,7 +161,7 @@ const App = () => {
           >
             <input
               type="text"
-              placeholder="Enter gif link!"
+              placeholder="Submit a GIF link to the portal!"
               value={inputValue}
               onChange={onInputChange}
             />
@@ -150,8 +169,17 @@ const App = () => {
           </form>
           <div className="gif-grid">
             {gifList.map((item, index) => (
-              <div className="gif-item" key={index}>
+              <div 
+                className="gif-item" 
+                key={index} 
+                onClick={() => renderModal()} 
+                onMouseEnter={() => setHoveredGifIndex(index)}
+              >
                 <img src={item.gifLink} alt={item.gifLink} />
+                <div className="gif-description">
+                  <div className="text">🤍 0</div>
+                  <div className="text">💬 0</div>
+                </div>
               </div>
             ))}
           </div>
@@ -214,14 +242,20 @@ const App = () => {
   return (
     <div className="App">
       <div className={walletAddress ? 'authed-container' : 'container'}>
+        <div id="myModal" className="modal">
+          <div className="modal-content">
+            <span className="close" onClick={() => renderCloseModalOnClick()}>&times;</span>
+            <p>{hoveredGifIndex}</p>
+          </div>
+        </div>
         <div className="header-container">
           <p className="header">🖼 GIF Portal</p>
           <p className="sub-text">
             View the collection of all the funniest GIFs in the metaverse ✨
           </p>
-          {!walletAddress && renderNotConnectedContainer()}
-          {walletAddress && renderConnectedContainer()}
         </div>
+        {!walletAddress && renderNotConnectedContainer()}
+        {walletAddress && renderConnectedContainer()}
         <div className="footer-container">
           <img alt="Twitter Logo" className="twitter-logo" src={twitterLogo} />
           <a
