@@ -194,7 +194,7 @@
 }
 
 .modal-content .modal-image-container {
-  width: 50%;
+  width: 100%;
   display: flex;
   align-items: center;
 }
@@ -214,7 +214,7 @@
 
 .modal-actions-container {
   background-color: #ffffff;
-  width: 50%;
+  width: 100%;
   height: 95%;
   padding: 1%;
   display: flex;
@@ -234,13 +234,103 @@
   padding: 3%;
 }
 
-.modal-actions-container .operations-container {
+.modal-actions-container .comments-container {
   width: 100%;
+  height: 100%;
+  padding: 20px 0 0 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.modal-actions-container .single-comment-container {
+  padding-bottom: 25px;
+}
+
+.single-comment {
+  padding: 0 10px;
+  white-space: pre-wrap;
+  text-align: left;
+}
+
+.single-comment-wallet-addr {
+  display: inline;
+  font-weight: 700;
+}
+
+.comment-timestamp {
+  display: flex;
+  flex-direction: flex-start;
+  padding: 0 10px;
+  padding-top: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: gray;
+}
+
+.modal-actions-container .operations-container {
+  width: 95%;
   padding: 2%;
+  bottom: 0;
+  border: solid thin #DFDFDF;
+}
+
+.like-and-tips-container {
+  padding: 0 2% 2% 2%;
+  display: flex;
+  flex-direction: column;
+}
+
+.like-and-tips-operations {
+  display: flex;
+  justify-content: space-between;
+  font-size: 24px;
+  padding-bottom: 2%;
+}
+
+.like-and-comment-container {
+  display: flex;
+}
+
+.like-container {
+  border-radius: 5px;
+}
+
+.like-container:hover {
+  background-color: #2A52BE;
+  cursor: pointer;
+}
+
+.comment-container {
+  border-radius: 5px;
+  margin-left: 10px;
+}
+
+.comment-container:hover {
+  background-color: #2A52BE;
+  cursor: pointer;
+}
+
+.tip-container {
+  border-radius: 5px;
+}
+
+.tip-container:hover {
+  background-color: #2A52BE;
+  cursor: pointer;
+}
+
+.like-and-tips-number {
   display: flex;
   flex-direction: row;
-  position: absolute;
-  bottom: 0;
+  width: 100%;
+  padding: 2% 2px;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.create-comment-container {
+  display: flex;
+  flex-direction: row;
 }
 
 .textarea {
@@ -251,7 +341,7 @@
   font-size: 16px;
   resize: none;
   outline: none;
-  flex: 5;
+  flex: 8;
 }
 
 .post-button-container {
@@ -259,10 +349,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-left: 2%;
 }
 
 .post-button-container:hover {
   cursor: pointer;
+}
+
+.post-button-container:hover .post-button {
+  color: #77c3ec;
 }
 
 .post-button {
@@ -290,7 +385,6 @@
 /* The Close Button */
 .close {
   color: #aaaaaa;
-  /* float: right; */
   position: absolute;
   z-index: 1;
   top: 1%;

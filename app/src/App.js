@@ -303,21 +303,150 @@ const App = () => {
                     <div className="modal-actions-container">
                       <div className="title-container">
                         <div className="title">GIF by: <strong>{
-                          '0x' 
-                          + gifList[hoveredGifIndex].userAddress.toString().slice(0, 3) 
+                          gifList[hoveredGifIndex].userAddress.toString().slice(0, 4) 
                           + '...' 
-                          + gifList[hoveredGifIndex].userAddress.toString().slice(gifList[hoveredGifIndex].userAddress.toString().length - 3,)
+                          + gifList[hoveredGifIndex].userAddress.toString().slice(gifList[hoveredGifIndex].userAddress.toString().length - 4,)
                         }</strong> ({formatDate(new Date())})</div>
                       </div>
+                      <div className="comments-container">
+                        <div className="single-comment-container">
+                          <div className="single-comment">
+                            <div className="single-comment-wallet-addr">{
+                              gifList[hoveredGifIndex].userAddress.toString().slice(0, 4) 
+                              + '...' 
+                              + gifList[hoveredGifIndex].userAddress.toString().slice(gifList[hoveredGifIndex].userAddress.toString().length - 4,)
+                            }</div>
+                            {": hello!!! test test test test test test \n\ntest test test test test test test test test test \ntest test test test test  test test test test"} 
+                          </div>
+                          <div className="comment-timestamp">
+                            {formatDate(new Date())}
+                          </div>
+                        </div>
+                        <div className="single-comment-container">
+                          <div className="single-comment">
+                            <div className="single-comment-wallet-addr">{
+                              gifList[hoveredGifIndex].userAddress.toString().slice(0, 4) 
+                              + '...' 
+                              + gifList[hoveredGifIndex].userAddress.toString().slice(gifList[hoveredGifIndex].userAddress.toString().length - 4,)
+                            }</div>
+                            : hello how are you i am good thanks
+                          </div>
+                          <div className="comment-timestamp">
+                            {formatDate(new Date())}
+                          </div>
+                        </div>
+                        {/* START OF OVERFLOW TESTING */}
+                        <div className="single-comment-container">
+                          <div className="single-comment">
+                            <div className="single-comment-wallet-addr">{
+                              gifList[hoveredGifIndex].userAddress.toString().slice(0, 4) 
+                              + '...' 
+                              + gifList[hoveredGifIndex].userAddress.toString().slice(gifList[hoveredGifIndex].userAddress.toString().length - 4,)
+                            }</div>
+                            {": hello!!! test test test test test test \n\ntest test test test test test test test test test \ntest test test test test  test test test test"} 
+                          </div>
+                          <div className="comment-timestamp">
+                            {formatDate(new Date())}
+                          </div>
+                        </div>
+                        <div className="single-comment-container">
+                          <div className="single-comment">
+                            <div className="single-comment-wallet-addr">{
+                              gifList[hoveredGifIndex].userAddress.toString().slice(0, 4) 
+                              + '...' 
+                              + gifList[hoveredGifIndex].userAddress.toString().slice(gifList[hoveredGifIndex].userAddress.toString().length - 4,)
+                            }</div>
+                            {": hello!!! test test test test test test \n\ntest test test test test test test test test test \ntest test test test test  test test test test"} 
+                          </div>
+                          <div className="comment-timestamp">
+                            {formatDate(new Date())}
+                          </div>
+                        </div>
+                        <div className="single-comment-container">
+                          <div className="single-comment">
+                            <div className="single-comment-wallet-addr">{
+                              gifList[hoveredGifIndex].userAddress.toString().slice(0, 4) 
+                              + '...' 
+                              + gifList[hoveredGifIndex].userAddress.toString().slice(gifList[hoveredGifIndex].userAddress.toString().length - 4,)
+                            }</div>
+                            {": hello!!! test test test test test test \n\ntest test test test test test test test test test \ntest test test test test  test test test test"} 
+                          </div>
+                          <div className="comment-timestamp">
+                            {formatDate(new Date())}
+                          </div>
+                        </div>
+                        <div className="single-comment-container">
+                          <div className="single-comment">
+                            <div className="single-comment-wallet-addr">{
+                              gifList[hoveredGifIndex].userAddress.toString().slice(0, 4) 
+                              + '...' 
+                              + gifList[hoveredGifIndex].userAddress.toString().slice(gifList[hoveredGifIndex].userAddress.toString().length - 4,)
+                            }</div>
+                            {": hello!!! test test test test test test \n\ntest test test test test test test test test test \ntest test test test test  test test test test"} 
+                          </div>
+                          <div className="comment-timestamp">
+                            {formatDate(new Date())}
+                          </div>
+                        </div>
+                        <div className="single-comment-container">
+                          <div className="single-comment">
+                            <div className="single-comment-wallet-addr">{
+                              gifList[hoveredGifIndex].userAddress.toString().slice(0, 4) 
+                              + '...' 
+                              + gifList[hoveredGifIndex].userAddress.toString().slice(gifList[hoveredGifIndex].userAddress.toString().length - 4,)
+                            }</div>
+                            {": hello!!! test test test test test test \n\ntest test test test test test test test test test \ntest test test test test  test test test test"} 
+                          </div>
+                          <div className="comment-timestamp">
+                            {formatDate(new Date())}
+                          </div>
+                        </div>
+                        <div className="single-comment-container">
+                          <div className="single-comment">
+                            <div className="single-comment-wallet-addr">{
+                              gifList[hoveredGifIndex].userAddress.toString().slice(0, 4) 
+                              + '...' 
+                              + gifList[hoveredGifIndex].userAddress.toString().slice(gifList[hoveredGifIndex].userAddress.toString().length - 4,)
+                            }</div>
+                            {": hello!!! test test test test test test \n\ntest test test test test test test test test test \ntest test test test test  test test test test"} 
+                          </div>
+                          <div className="comment-timestamp">
+                            {formatDate(new Date())}
+                          </div>
+                        </div>
+                        {/* END OF OVERFLOW TESTING */}
+                      </div>
                       <div className="operations-container">
-                        <textarea 
-                          className="textarea"
-                          placeholder="Add a comment..."
-                        >
-                        </textarea>
-                        <div className="post-button-container">
-                          <div className="post-button">
-                            Post
+                        <div className="like-and-tips-container">
+                          <div className="like-and-tips-operations">
+                            <div className="like-and-comment-container">
+                              <div className="like-container">
+                                <div className="like">🤍</div>
+                              </div>
+                              <div className="comment-container" onClick={
+                                () => document.getElementsByClassName("textarea")[0].focus()
+                              }>
+                                <div className="comment">💬</div>
+                              </div>
+                            </div>
+                            <div className="tip-container">
+                              <div className="tip">👑</div>
+                            </div>
+                          </div>
+                          <div className="like-and-tips-number">
+                            0 likes
+                          </div>
+                        </div>
+                        <div className='create-comment-container'>
+                          <textarea 
+                            className="textarea"
+                            placeholder="Add a comment..."
+                          >
+                          </textarea>
+                          <div className="post-button-container">
+                            <div className="post-button">
+                              Post
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -342,7 +471,7 @@ const App = () => {
           </p>
         </div>
         {!walletAddress && renderNotConnectedContainer()}
-        {walletAddress && !loading && renderConnectedContainer()}
+        {walletAddress && gifList && renderConnectedContainer()}
         <div className="footer-container">
           <img alt="Twitter Logo" className="twitter-logo" src={twitterLogo} />
           <a
