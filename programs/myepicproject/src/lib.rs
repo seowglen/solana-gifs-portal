@@ -1,62 +1,126 @@
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::system_program;
 
 declare_id!("8Fyzw4RT9efF9VpqHvazHRPnfohhviX5VmtUmQN4ATxw");
 
 #[program]
 pub mod myepicproject {
   use super::*;
-  pub fn start_stuff_off(ctx: Context<StartStuffOff>) -> ProgramResult {
-    let base_account = &mut ctx.accounts.base_account;
-    base_account.total_gifs = 0;
-    Ok(())
-  }
-
-  // The function now accepts a gif_link param from the user. We also reference the user from the Context
+  
   pub fn add_gif(ctx: Context<AddGif>, gif_link: String) -> ProgramResult {
-    let base_account = &mut ctx.accounts.base_account;
-    let user = &mut ctx.accounts.user;
+    let gif = &mut ctx.accounts.gif;
+    let user = &ctx.accounts.user;
+    let clock = Clock::get().unwrap();
 
-	// Build the struct.
-    let item = ItemStruct {
-      gif_link: gif_link.to_string(),
-      user_address: *user.to_account_info().key,
-    };
+    gif.gif_link = gif_link.to_string();
+    gif.user = *user.key;
+    gif.timestamp = clock.unix_timestamp;
 		
-	// Add it to the gif_list vector.
-    base_account.gif_list.push(item);
-    base_account.total_gifs += 1;
     Ok(())
   }
+
+  pub fn like_gif(ctx: Context<LikeGif>) -> ProgramResult {
+    let likes = &mut ctx.accounts.gif.likes;
+    let user = &ctx.accounts.user;
+    
+    if likes.iter_mut().any(|x| *x == *user.key) {
+      likes.retain(|x| *x != *user.key)
+    } else {
+      likes.push(*user.key);
+    }
+
+    Ok(())
+  }
+
+  pub fn comment_gif(ctx: Context<CommentGif>, gif_comment: String) -> ProgramResult {
+    let comments = &mut ctx.accounts.gif.comments;
+    let user = &ctx.accounts.user;
+    let clock = Clock::get().unwrap();
+    
+    let comment = CommentStruct {
+      user: *user.key,
+      comment: gif_comment.to_string(),
+      timestamp: clock.unix_timestamp,
+    };
+
+    comments.push(comment);
+
+    Ok(())
+  }
+
+  pub fn delete_gif(_ctx: Context<DeleteGif>) -> ProgramResult {
+    Ok(())
+  }
+
+  // FOR TESTING ONLY:
+
+  // pub fn delete_gifs(_ctx: Context<DeleteGifs>) -> ProgramResult {
+  //   Ok(())
+  // }
 }
 
-#[derive(Accounts)]
-pub struct StartStuffOff<'info> {
-  #[account(init, payer = user, space = 9000)]
-  pub base_account: Account<'info, BaseAccount>,
-  #[account(mut)]
-  pub user: Signer<'info>,
-  pub system_program: Program <'info, System>,
+#[derive(Debug, Clone, AnchorSerialize, AnchorDeserialize)]
+pub struct CommentStruct {
+  pub user: Pubkey,
+  pub comment: String,
+  pub timestamp: i64,
 }
 
-// Add the signer who calls the AddGif method to the struct so that we can save it
 #[derive(Accounts)]
 pub struct AddGif<'info> {
+  #[account(init, payer = user, space = 10000)]
+  pub gif: Account<'info, Gif>,
   #[account(mut)]
-  pub base_account: Account<'info, BaseAccount>,
+  pub user: Signer<'info>,
+  #[account(address = system_program::ID)]
+  pub system_program: AccountInfo<'info>,
+}
+
+#[derive(Accounts)]
+pub struct LikeGif<'info> {
+  #[account(mut)]
+  pub gif: Account<'info, Gif>,
+  pub user: Signer<'info>,
+}
+
+#[derive(Accounts)]
+pub struct CommentGif<'info> {
+  #[account(mut)]
+  pub gif: Account<'info, Gif>,
+  pub user: Signer<'info>,
+}
+
+#[derive(Accounts)]
+pub struct TipGif<'info> {
+  #[account(mut)]
+  pub gif: Account<'info, Gif>,
+  pub user: Signer<'info>,
+}
+
+#[derive(Accounts)]
+pub struct DeleteGif<'info> {
+  #[account(mut, has_one = user, close = user)]
+  pub gif: Account<'info, Gif>,
   #[account(mut)]
   pub user: Signer<'info>,
 }
 
-// Create a custom struct for us to work with.
-#[derive(Debug, Clone, AnchorSerialize, AnchorDeserialize)]
-pub struct ItemStruct {
-  pub gif_link: String,
-  pub user_address: Pubkey,
-}
+// FOR TESTING ONLY:
+
+// #[derive(Accounts)]
+// pub struct DeleteGifs<'info> {
+//   #[account(mut, close = user)]
+//   pub gif: Account<'info, Gif>,
+//   #[account(mut)]
+//   pub user: Signer<'info>,
+// }
 
 #[account]
-pub struct BaseAccount {
-  pub total_gifs: u64,
-	// Attach a Vector of type ItemStruct to the account.
-  pub gif_list: Vec<ItemStruct>,
+pub struct Gif {
+  pub gif_link: String,
+  pub user: Pubkey,
+  pub timestamp: i64,
+  pub likes: Vec<Pubkey>,
+  pub comments: Vec<CommentStruct>,
+  pub tips: u64,
 }
