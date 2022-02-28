@@ -121,6 +121,73 @@ const main = async() => {
   console.log("🚗🚗🚗 ALL Accounts: ", accounts);
   console.log("🚗🚗🚗 Length of ALL Accounts:", accounts.length);
 
+  console.log("🚗🚗🚗 Testing tipping feature...:");
+  let balance = await program.provider.connection.getBalance(provider.wallet.publicKey);
+  console.log("🚗🚗🚗 Provider wallet balance: ", balance);
+  balance = await program.provider.connection.getBalance(user1.publicKey);
+  console.log("🚗🚗🚗 User1 wallet balance: ", balance);
+
+  await program.rpc.tipGif({
+    accounts: {
+      gif: accounts[0].publicKey,
+      from: user1.publicKey,
+      to: accounts[0].account.user,
+      systemProgram: SystemProgram.programId,
+    },
+    signers: [user1],
+  });
+
+  balance = await program.provider.connection.getBalance(provider.wallet.publicKey);
+  console.log("🚗🚗🚗 Provider wallet balance: ", balance);
+  balance = await program.provider.connection.getBalance(user1.publicKey);
+  console.log("🚗🚗🚗 User1 wallet balance: ", balance);
+  account = await program.account.gif.fetch(accounts[0].publicKey);
+  console.log("🚗🚗🚗 GIF account 1 after tipping: ", account);
+
+  console.log("🚗🚗🚗 Airdropping user2 some Solana... (0.035 SOL)")
+  const user2 = anchor.web3.Keypair.generate();
+  const signature2 = await program.provider.connection.requestAirdrop(user2.publicKey, 35000000);
+  await program.provider.connection.confirmTransaction(signature2);
+  console.log("🚗🚗🚗 Airdrop done!..");
+
+  balance = await program.provider.connection.getBalance(user1.publicKey);
+  console.log("🚗🚗🚗 User1 wallet balance: ", balance);
+  balance = await program.provider.connection.getBalance(user2.publicKey);
+  console.log("🚗🚗🚗 User2 wallet balance: ", balance);
+  account = await program.account.gif.fetch(accounts[2].publicKey);
+
+  await program.rpc.tipGif({
+    accounts: {
+      gif: accounts[2].publicKey,
+      from: user2.publicKey,
+      to: accounts[2].account.user,
+      systemProgram: SystemProgram.programId,
+    },
+    signers: [user2],
+  });
+
+  balance = await program.provider.connection.getBalance(user1.publicKey);
+  console.log("🚗🚗🚗 User1 wallet balance: ", balance);
+  balance = await program.provider.connection.getBalance(user2.publicKey);
+  console.log("🚗🚗🚗 User2 wallet balance: ", balance);
+  account = await program.account.gif.fetch(accounts[2].publicKey);
+  console.log("🚗🚗🚗 GIF account 3 after tipping: ", account);
+
+  console.log("🚗🚗🚗 Below should return an error as user2 does not have enough solana");
+  try {
+    await program.rpc.tipGif({
+      accounts: {
+        gif: accounts[2].publicKey,
+        from: user2.publicKey,
+        to: accounts[2].account.user,
+        systemProgram: SystemProgram.programId,
+      },
+      signers: [user2],
+    });
+  } catch(err) {
+    console.log("Here is the error: ", err.message);
+  }
+
   console.log("🚗🚗🚗 Deleting accounts... ");
 
   console.log("🚗🚗🚗 Deleting FIRST ACCOUNT... ");
