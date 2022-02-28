@@ -3,10 +3,10 @@
   "name": "myepicproject",
   "instructions": [
     {
-      "name": "addGif",
+      "name": "startStuffOff",
       "accounts": [
         {
-          "name": "gif",
+          "name": "baseAccount",
           "isMut": true,
           "isSigner": true
         },
@@ -19,6 +19,22 @@
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "addGif",
+      "accounts": [
+        {
+          "name": "baseAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "user",
+          "isMut": true,
+          "isSigner": true
         }
       ],
       "args": [
@@ -27,90 +43,33 @@
           "type": "string"
         }
       ]
-    },
-    {
-      "name": "likeGif",
-      "accounts": [
-        {
-          "name": "gif",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "user",
-          "isMut": false,
-          "isSigner": true
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "commentGif",
-      "accounts": [
-        {
-          "name": "gif",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "user",
-          "isMut": false,
-          "isSigner": true
-        }
-      ],
-      "args": [
-        {
-          "name": "gifComment",
-          "type": "string"
-        }
-      ]
-    },
-    {
-      "name": "tipGif",
-      "accounts": [
-        {
-          "name": "gif",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "from",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "to",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "deleteGif",
-      "accounts": [
-        {
-          "name": "gif",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "user",
-          "isMut": true,
-          "isSigner": true
-        }
-      ],
-      "args": []
     }
   ],
   "accounts": [
     {
-      "name": "Gif",
+      "name": "BaseAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "totalGifs",
+            "type": "u64"
+          },
+          {
+            "name": "gifList",
+            "type": {
+              "vec": {
+                "defined": "ItemStruct"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "types": [
+    {
+      "name": "ItemStruct",
       "type": {
         "kind": "struct",
         "fields": [
@@ -119,67 +78,11 @@
             "type": "string"
           },
           {
-            "name": "user",
+            "name": "userAddress",
             "type": "publicKey"
-          },
-          {
-            "name": "timestamp",
-            "type": "i64"
-          },
-          {
-            "name": "likes",
-            "type": {
-              "vec": "publicKey"
-            }
-          },
-          {
-            "name": "comments",
-            "type": {
-              "vec": {
-                "defined": "CommentStruct"
-              }
-            }
-          },
-          {
-            "name": "tips",
-            "type": "u64"
           }
         ]
       }
-    }
-  ],
-  "types": [
-    {
-      "name": "CommentStruct",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "user",
-            "type": "publicKey"
-          },
-          {
-            "name": "comment",
-            "type": "string"
-          },
-          {
-            "name": "timestamp",
-            "type": "i64"
-          }
-        ]
-      }
-    }
-  ],
-  "errors": [
-    {
-      "code": 6000,
-      "name": "TransferSolError",
-      "msg": "An error has occured while transferring SOL."
-    },
-    {
-      "code": 6001,
-      "name": "NotEnoughSolError",
-      "msg": "The user does not have enough SOL (0.02) to tip a GIF."
     }
   ],
   "metadata": {
