@@ -1,41 +1,53 @@
 import React, { useEffect, useState } from 'react';
 import './App.css';
+import dayjs from 'dayjs';
+import localizedFormat from 'dayjs/plugin/localizedFormat';
+import relativeTime from 'dayjs/plugin/relativeTime';
 import { Connection, PublicKey, clusterApiUrl } from '@solana/web3.js';
 import { Program, Provider, web3 } from '@project-serum/anchor';
-
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import idl from './idl.json';
 
-// SystemProgram is a reference to the Solana runtime!
+dayjs.extend(localizedFormat);
+dayjs.extend(relativeTime);
+
+// CONSTANTS: 
+
 const { SystemProgram, Keypair } = web3;
-
-// Get our program's id from the IDL file.
 const programID = new PublicKey(idl.metadata.address);
-
-// Set our network to devnet.
 const network = clusterApiUrl('devnet');
-
-// Controls how we want to acknowledge when a transaction is "done".
 const opts = {
   preflightCommitment: "processed"
 }
-
-// Constants
-const TEST_GIFS = [
-	'https://media.giphy.com/media/otnqsqqzmsw7K/giphy.gif',
-	'https://media.giphy.com/media/GbMEqTy3M5NMA/giphy.gif',
-	'https://media.giphy.com/media/2IodXMfbcVVrW/giphy.gif',
-	'https://media.giphy.com/media/1d7F9xyq6j7C1ojbC5/giphy.gif'
-]
+const toastParams = {
+  position: "top-right",
+  autoClose: 5000,
+  hideProgressBar: false,
+  closeOnClick: true,
+  pauseOnHover: true,
+  draggable: true,
+  progress: undefined,
+}
 
 const App = () => {
   /*              STATE               */
 
   const [walletAddress, setWalletAddress] = useState(null);
   const [inputValue, setInputValue] = useState('');
+  const [textareaValue, setTextareaValue] = useState('');
   const [gifList, setGifList] = useState([]);
   const [hoveredGifIndex, setHoveredGifIndex] = useState(0);
 
   /*              ACTIONS             */
+  
+  const notify_success = (message) => {
+    toast.success(message, toastParams);
+  }
+
+  const notify_error = (message) => {
+    toast.error(message, toastParams);
+  }
 
   const onInputChange = (event) => {
     const { value } = event.target;
@@ -73,24 +85,8 @@ const App = () => {
     setHoveredGifIndex(index + 1);
   }
 
-  function padTo2Digits(num) {
-    return num.toString().padStart(2, '0');
-  }
-  
-  function formatDate(date) {
-    return (
-      [
-        date.getFullYear(),
-        padTo2Digits(date.getMonth() + 1),
-        padTo2Digits(date.getDate()),
-      ].join('-') +
-      ' ' +
-      [
-        padTo2Digits(date.getHours()),
-        padTo2Digits(date.getMinutes()),
-        padTo2Digits(date.getSeconds()),
-      ].join(':')
-    );
+  const handleTextareaChange = (e) => {
+    setTextareaValue(e.target.value);
   }
 
   const renderNotConnectedContainer = () => (
@@ -129,10 +125,13 @@ const App = () => {
               onClick={() => renderModal()} 
               onMouseEnter={() => setHoveredGifIndex(index)}
             >
+              {item.account.tips.toNumber() > 0 && 
+                <div className="tip-showcase">👑</div>
+              }
               <img src={item.account.gifLink} alt={item.account.gifLink} />
               <div className="gif-description">
-                <div className="text">🤍 0</div>
-                <div className="text">💬 0</div>
+                <div className="text">🤍 {item.account.likes.length}</div>
+                <div className="text">💬 {item.account.comments.length}</div>
               </div>
             </div>
           ))}
@@ -150,16 +149,11 @@ const App = () => {
 
       if (solana) {
         if (solana.isPhantom) {
-          console.log('Phantom wallet found!');
           const response = await solana.connect({ onlyIfTrusted: true });
-          console.log(
-            'Connected with Public Key:',
-            response.publicKey.toString()
-          );
-          setWalletAddress(response.publicKey.toString());
+          setWalletAddress(response.publicKey);
         }
       } else {
-        alert('Solana object not found! Get a Phantom Wallet 👻');
+        notify_error('Solana object not found! Get a Phantom Wallet 👻');
       }
     } catch (error) {
       console.error(error);
@@ -171,8 +165,15 @@ const App = () => {
   
     if (solana) {
       const response = await solana.connect();
-      console.log('Connected with Public Key:', response.publicKey.toString());
-      setWalletAddress(response.publicKey.toString());
+      notify_success(
+        'Connected: ' 
+        + response.publicKey.toString().slice(0, 5) 
+        + '...' 
+        + response.publicKey.toString().slice(response.publicKey.toString().length-5)
+      );
+      setWalletAddress(response.publicKey);
+    } else {
+      notify_error('Solana object not found! Get a Phantom Wallet 👻');
     }
   };
 
@@ -186,12 +187,17 @@ const App = () => {
 
   const sendGif = async () => {
     if (inputValue.length === 0) {
-      console.log("No gif link given!")
+      notify_error("No GIF Link given!");
       return
     }
+    const regex = new RegExp('^https?://(?:[a-z0-9\-]+\.)+[a-z]{2,6}(?:/[^/#?]+)+\.(?:gif)$');
+    if (!regex.test(inputValue)) {
+      notify_error("Please enter a valid GIF link!");
+      notify_error("You can get some GIF link examples from GIPHY");
+      setInputValue('');
+      return;
+    }
     setInputValue('');
-    console.log('Gif link:', inputValue);
-    console.log('Hovered Gif: ', hoveredGifIndex);
     try {
       const provider = getProvider();
       const program = new Program(idl, programID, provider);
@@ -205,10 +211,8 @@ const App = () => {
         },
         signers: [gifKeypair],
       });
-      console.log("GIF successfully sent to program", inputValue);
 
       const account = await program.account.gif.fetch(gifKeypair.publicKey);
-      console.log(account);
       setGifList(gifList => [
         {
           publicKey: gifKeypair.publicKey,
@@ -216,19 +220,106 @@ const App = () => {
         },
         ...gifList, 
       ]);
+
+      notify_success("Success added GIF to the portal!");
     } catch (error) {
-      console.log("Error sending GIF:", error)
+      notify_error("Error sending GIF:" + error.message);
+      console.log("Error sending GIF:", error);
     }
   };
+
+  const likeGif = async (index, account) => {
+    try {
+      const provider = getProvider();
+      const program = new Program(idl, programID, provider);
+
+      await program.rpc.likeGif({
+        accounts: {
+          gif: account.publicKey,
+          user: provider.wallet.publicKey,
+        },
+        signers: [],
+      });
+
+      const newAccount = await program.account.gif.fetch(account.publicKey);
+      let copy = [...gifList];
+      copy[index].account = newAccount;
+      setGifList(copy);
+
+      notify_success("Successfully liked GIF!");
+    } catch (error) {
+      notify_error("Error liking GIF:" + error.message);
+      console.log("Error liking GIF: ", error.message);
+    }
+  }
+
+  const tipGif = async (index, account) => {
+    if (account.account.user.toString() === walletAddress.toString()) return;
+
+    try {
+      const provider = getProvider();
+      const program = new Program(idl, programID, provider);
+
+      await program.rpc.tipGif({
+        accounts: {
+          gif: account.publicKey,
+          from: provider.wallet.publicKey,
+          to: account.account.user,
+          systemProgram: SystemProgram.programId,
+        },
+        signers: [],
+      });
+
+      const newAccount = await program.account.gif.fetch(account.publicKey);
+      let copy = [...gifList];
+      copy[index].account = newAccount;
+      setGifList(copy);
+
+      notify_success("Successfully tipped GIF!");
+    } catch (error) {
+      notify_error("Error tipping GIF: " + error.message);
+      console.log("Error tipping GIF: ", error.message);
+    }
+  }
+
+  const handleCommentSubmit = async (index, account) => {
+    const comment = textareaValue;
+    setTextareaValue('');
+    const trimmedComment = comment.trim();
+    if (!trimmedComment) return;
+
+    try {
+      const provider = getProvider();
+      const program = new Program(idl, programID, provider);
+
+      await program.rpc.commentGif(trimmedComment, {
+        accounts: {
+          gif: account.publicKey,
+          user: provider.wallet.publicKey,
+        },
+        signers: [],
+      });
+      
+      const newAccount = await program.account.gif.fetch(account.publicKey);
+      let copy = [...gifList];
+      copy[index].account = newAccount;
+      setGifList(copy);
+
+      notify_success("Successfully commented on GIF!");
+    } catch (error) {
+      notify_error("Error commenting on GIF: " + error.message);
+      console.log("Error commenting GIF: ", error.message);
+    }
+  }
 
   const getGifList = async() => {
     try {
       const provider = getProvider();
       const program = new Program(idl, programID, provider);
       const accounts = await program.account.gif.all();
-      console.log("list of gif accounts: ", accounts);
       setGifList(accounts);   
     } catch (error) {
+      notify_error("Error getting all GIFs: " + error.message);
       console.log("Error in getGifList: ", error)
       setGifList(null);
     }
@@ -246,15 +337,15 @@ const App = () => {
 
   useEffect(() => {
     if (walletAddress) {
-      console.log('Fetching GIF list...');
       getGifList()
     }
   }, [walletAddress]);
 
   return (
     <div className="App">
+      <ToastContainer />
       <div className={walletAddress ? 'authed-container' : 'container'}>
-        {gifList.length > 0 &&
+        {walletAddress && gifList.length > 0 &&
           <div id="myModal" className="modal">
             <div className="modal-divs">
               <div className="modal-image-left">
@@ -281,42 +372,38 @@ const App = () => {
                           gifList[hoveredGifIndex].account.user.toString().slice(0, 4) 
                           + '...' 
                           + gifList[hoveredGifIndex].account.user.toString().slice(gifList[hoveredGifIndex].account.user.toString().length - 4,)
-                        }</strong> ({formatDate(new Date())})</div>
+                          + ' '
+                        }</strong> 
+                        ({dayjs.unix(gifList[hoveredGifIndex].account.timestamp.toString()).format('lll')})
+                        </div>
                       </div>
                       <div className="comments-container">
-                        <div className="single-comment-container">
-                          <div className="single-comment">
-                            <div className="single-comment-wallet-addr">{
-                              gifList[hoveredGifIndex].account.user.toString().slice(0, 4) 
-                              + '...' 
-                              + gifList[hoveredGifIndex].account.user.toString().slice(gifList[hoveredGifIndex].account.user.toString().length - 4,)
-                            }</div>
-                            {": hello!!! test test test test test test \n\ntest test test test test test test test test test \ntest test test test test  test test test test"} 
+                        {gifList[hoveredGifIndex].account.comments.map(comment => (
+                          <div className="single-comment-container">
+                            <div className="single-comment">
+                              <div className="single-comment-wallet-addr">{
+                                comment.user.toString().slice(0, 4) 
+                                + '...' 
+                                + comment.user.toString().slice(comment.user.toString().length - 4,)
+                              }</div>
+                              {": " + comment.comment} 
+                            </div>
+                            <div className="comment-timestamp">
+                              {dayjs.unix(comment.timestamp.toString()).fromNow()}
+                            </div>
                           </div>
-                          <div className="comment-timestamp">
-                            {formatDate(new Date())}
-                          </div>
-                        </div>
-                        <div className="single-comment-container">
-                          <div className="single-comment">
-                            <div className="single-comment-wallet-addr">{
-                              gifList[hoveredGifIndex].account.user.toString().slice(0, 4) 
-                              + '...' 
-                              + gifList[hoveredGifIndex].account.user.toString().slice(gifList[hoveredGifIndex].account.user.toString().length - 4,)
-                            }</div>
-                            : hello how are you i am good thanks
-                          </div>
-                          <div className="comment-timestamp">
-                            {formatDate(new Date())}
-                          </div>
-                        </div>
+                        )).reverse()}
                       </div>
                       <div className="operations-container">
                         <div className="like-and-tips-container">
                           <div className="like-and-tips-operations">
                             <div className="like-and-comment-container">
-                              <div className="like-container">
-                                <div className="like">🤍</div>
+                              <div className="like-container" onClick={() => likeGif(hoveredGifIndex, gifList[hoveredGifIndex])}>
+                                {gifList[hoveredGifIndex].account.likes.some(e => e.toString() === walletAddress.toString()) ? (
+                                  <div className="like">❤️</div>
+                                ) : (
+                                  <div className="like">🤍</div>
+                                )}
                               </div>
                               <div className="comment-container" onClick={
                                 () => document.getElementsByClassName("textarea")[0].focus()
@@ -324,21 +411,23 @@ const App = () => {
                                 <div className="comment">💬</div>
                               </div>
                             </div>
-                            <div className="tip-container">
-                              <div className="tip">👑</div>
+                            <div className="tip-container" onClick={() => tipGif(hoveredGifIndex, gifList[hoveredGifIndex])}>
+                              <div className="tip">{gifList[hoveredGifIndex].account.tips.toNumber()} 👑</div>
                             </div>
                           </div>
                           <div className="like-and-tips-number">
-                            0 likes
+                            {gifList[hoveredGifIndex].account.likes.length} likes
                           </div>
                         </div>
                         <div className='create-comment-container'>
                           <textarea 
                             className="textarea"
+                            value={textareaValue}
                             placeholder="Add a comment..."
+                            onChange={e => handleTextareaChange(e)}
                           >
                           </textarea>
-                          <div className="post-button-container">
+                          <div className="post-button-container" onClick={() => handleCommentSubmit(hoveredGifIndex, gifList[hoveredGifIndex])}>
                             <div className="post-button">
                               Post
                             </div>
@@ -360,13 +449,15 @@ const App = () => {
           </div>
         }
         <div className="header-container">
-          <p className="header">🖼 GIF Portal</p>
+          <p className="header">🖼 Solana GIFs Portal</p>
           <p className="sub-text">
-            View the collection of all the funniest GIFs in the metaverse ✨
+            View all the funniest GIFs in the Solana metaverse ✨
           </p>
         </div>
         {!walletAddress && renderNotConnectedContainer()}
         {walletAddress && gifList && renderConnectedContainer()}
+        <div className="footer-container">
+        </div>
       </div>
     </div>
   );
